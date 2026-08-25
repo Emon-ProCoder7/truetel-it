@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+/* ============================================================
+   TrueTel — Managed IT ad-campaign landing page
+   Palette + type scale sampled directly from the reference
+   (aeline.webflow.io): white/light-gray base, lime accent,
+   near-black cards, Plus Jakarta Sans, tight display tracking.
+   ============================================================ */
+
+:root {
+  --bg: #ffffff;
+  --bg-soft: #f2f2f2;
+  --bg-dark: #131313;
+  --bg-dark-soft: #1d1d1d;
+
+  --ink: #000000;
+  --ink-secondary: #585858;
+  --ink-faint: #8a8a8a;
+
+  --line: #efeff2;
+  --line-strong: #c7c7c7;
+
+  --accent: #d6fd70;
+  --accent-bright: #ebf213;
+  --accent-ink: #14210a; /* text-on-lime */
+
+  --on-dark: #ffffff;
+  --on-dark-secondary: rgba(255, 255, 255, 0.7);
+  --on-dark-line: rgba(255, 255, 255, 0.12);
+
+  --background: var(--bg);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-soft: var(--bg-soft);
+  --color-bg-dark: var(--bg-dark);
+  --color-bg-dark-soft: var(--bg-dark-soft);
+  --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-bright: var(--accent-bright);
+  --color-accent-ink: var(--accent-ink);
+
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+
+  --font-display: var(--font-jakarta);
+  --font-sans: var(--font-jakarta);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-marquee: marquee 36s linear infinite;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* ============================================================ Base */
+
+* { border-color: var(--line); }
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  overflow-x: clip;
+}
+
+::selection { background: rgba(214, 253, 112, 0.55); color: #000; }
+
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ============================================================ Typography
+   Sampled from reference: h1 60px / -0.06em tracking / 1.2 leading,
+   weight 500 (medium, not bold). Tracking loosens as size drops. */
+
+.text-display-hero {
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+.text-display-lg {
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+.text-display-md {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.text-display-sm {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+.eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: var(--ink);
+  flex-shrink: 0;
+}
+.eyebrow.on-dark { color: var(--on-dark-secondary); }
+.eyebrow.on-dark::before { background: var(--on-dark); }
+
+/* ============================================================ Utilities */
+
+.press { transition: transform 0.15s var(--ease-out-expo); }
+.press:active { transform: scale(0.97); }
+
+.card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+}
+.card-dark {
+  background: var(--bg-dark);
+  color: var(--on-dark);
+  border-radius: 24px;
+}
+.card-accent {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
