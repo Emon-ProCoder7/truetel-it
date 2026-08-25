@@ -1,19 +1,16 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { Star, TrendUp } from "@phosphor-icons/react";
-import { gsap, useGSAP } from "@/lib/gsap";
 import { HERO_CAROUSEL_CARDS, RATING } from "@/lib/site";
 
 type CardData = (typeof HERO_CAROUSEL_CARDS)[number];
 
 function Card({ card }: { card: CardData }) {
-  const style = { transform: `rotateZ(${card.rotate}deg) translateY(${Math.abs(card.rotate)}px)` };
-
   if (card.kind === "financial") {
     return (
-      <div style={style} className="w-40 shrink-0 rounded-2xl bg-white p-3.5 shadow-xl">
+      <div className="w-40 shrink-0 rounded-2xl bg-white p-3.5 shadow-xl">
         <div className="text-[0.65rem] text-ink-faint">{card.label}</div>
         <div className="mt-0.5 text-base font-bold text-ink">
           ${card.value.toLocaleString()} <span className="text-xs font-normal text-ink-faint">/ ${card.target.toLocaleString()}</span>
@@ -27,7 +24,7 @@ function Card({ card }: { card: CardData }) {
 
   if (card.kind === "photo") {
     return (
-      <div style={style} className="relative h-40 w-32 shrink-0 overflow-hidden rounded-2xl shadow-xl">
+      <div className="relative h-40 w-32 shrink-0 overflow-hidden rounded-2xl shadow-xl">
         <Image src={card.image} alt="" fill sizes="128px" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
         <span className="absolute bottom-2 left-2 right-2 text-[0.65rem] font-medium leading-tight text-white">{card.caption}</span>
@@ -37,7 +34,7 @@ function Card({ card }: { card: CardData }) {
 
   if (card.kind === "chart") {
     return (
-      <div style={style} className="w-40 shrink-0 rounded-2xl bg-white p-3.5 shadow-xl">
+      <div className="w-40 shrink-0 rounded-2xl bg-white p-3.5 shadow-xl">
         <div className="flex items-center justify-between text-[0.65rem] text-ink-faint">
           <span>{card.label}</span>
           <TrendUp size={12} weight="bold" className="text-accent" />
@@ -51,7 +48,7 @@ function Card({ card }: { card: CardData }) {
 
   if (card.kind === "dark") {
     return (
-      <div style={style} className="flex h-40 w-40 shrink-0 flex-col justify-between rounded-2xl bg-ink p-4 text-white shadow-xl">
+      <div className="flex h-40 w-40 shrink-0 flex-col justify-between rounded-2xl bg-ink p-4 text-white shadow-xl">
         <span className="flex size-6 items-center justify-center rounded-full bg-accent/90">
           <Star size={12} weight="fill" className="text-accent-ink" />
         </span>
@@ -62,7 +59,7 @@ function Card({ card }: { card: CardData }) {
 
   if (card.kind === "app") {
     return (
-      <div style={style} className="relative h-32 w-32 shrink-0 overflow-hidden rounded-2xl shadow-xl">
+      <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-2xl shadow-xl">
         <Image src={card.image} alt="" fill sizes="128px" className="object-cover" />
         <div className="absolute inset-0 bg-black/25" />
         <div className="absolute inset-0 flex flex-col items-start justify-center gap-1.5 p-2.5">
@@ -76,7 +73,7 @@ function Card({ card }: { card: CardData }) {
 
   // bars
   return (
-    <div style={style} className="w-40 shrink-0 rounded-2xl bg-white p-3.5 shadow-xl">
+    <div className="w-40 shrink-0 rounded-2xl bg-white p-3.5 shadow-xl">
       <div className="text-[0.65rem] text-ink-faint">{card.label}</div>
       <div className="mt-2 flex h-10 items-end gap-1">
         {[30, 45, 40, 60, 75, 65, 90].map((h, i) => (
@@ -87,23 +84,49 @@ function Card({ card }: { card: CardData }) {
   );
 }
 
-/** Single-row infinite perspective carousel + trust rating bar. */
-export default function HeroCarousel() {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const loop = [...HERO_CAROUSEL_CARDS, ...HERO_CAROUSEL_CARDS];
+const RING_CARDS = [...HERO_CAROUSEL_CARDS, ...HERO_CAROUSEL_CARDS];
+const RADIUS = 300;
+const ANGLE_STEP = 360 / RING_CARDS.length;
+const DEG_PER_FRAME = 0.045; // slow, perpetual spin
 
-  useGSAP(() => {
-    if (!trackRef.current) return;
-    gsap.to(trackRef.current, { xPercent: -50, duration: 42, ease: "none", repeat: -1 });
+/**
+ * Cards arranged around a continuously auto-rotating 3D cylinder (runs on
+ * its own — no scroll dependency), tilted back slightly so the front-facing
+ * cards read higher than the ones curving away at the sides.
+ */
+export default function HeroCarousel() {
+  const ringRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let angle = 0;
+    let raf = 0;
+    const tick = () => {
+      angle += DEG_PER_FRAME;
+      if (ringRef.current) ringRef.current.style.transform = `rotateY(${angle}deg)`;
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
   }, []);
 
   return (
     <div className="relative z-10 pb-8 pt-2 sm:pb-10">
-      <div className="overflow-hidden pb-2" style={{ perspective: "1200px" }}>
-        <div ref={trackRef} className="flex w-max items-end gap-4 px-4" style={{ transformStyle: "preserve-3d" }}>
-          {loop.map((card, i) => (
-            <Card key={i} card={card} />
-          ))}
+      <div className="relative h-[210px] overflow-hidden" style={{ perspective: 1400 }}>
+        <div className="absolute inset-0" style={{ transformStyle: "preserve-3d", transform: "rotateX(8deg)" }}>
+          <div ref={ringRef} className="absolute inset-0" style={{ transformStyle: "preserve-3d" }}>
+            {RING_CARDS.map((card, i) => (
+              <div
+                key={i}
+                className="absolute left-1/2 top-1/2"
+                style={{ transform: `rotateY(${i * ANGLE_STEP}deg) translateZ(${RADIUS}px)` }}
+              >
+                <div className="-translate-x-1/2 -translate-y-1/2">
+                  <Card card={card} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

@@ -47,19 +47,6 @@ export default function Hero() {
         <Nav />
         <CloudSky />
 
-        {/* Giant background watermark */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-[18%] select-none text-center font-black leading-none text-white/[0.08]"
-          style={{
-            fontSize: "clamp(6rem, 22vw, 18rem)",
-            letterSpacing: "-0.02em",
-            transform: "perspective(600px) rotateX(8deg) scale(1.05)",
-          }}
-        >
-          TRUETEL
-        </div>
-
         <div className="relative z-10 flex flex-col items-center px-5 pb-6 pt-32 text-center sm:pt-40">
           <h1
             className="text-display-hero max-w-4xl text-[clamp(2.2rem,5.4vw,3.6rem)] text-white"
