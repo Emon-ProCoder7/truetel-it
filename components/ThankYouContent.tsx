@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { CheckCircle, Phone, ArrowLeft } from "@phosphor-icons/react";
 import { CONTACT } from "@/lib/site";
+import { Confetti, type ConfettiRef } from "@/components/ui/confetti";
 
 /** Fires once, on load — this page exists specifically to be the GHL
  * post-submit redirect target, so a page view here IS a confirmed lead. */
@@ -21,18 +22,56 @@ function fireLeadConversion() {
   }
 }
 
+function fireFireworks(confettiRef: React.RefObject<ConfettiRef | null>) {
+  const end = Date.now() + 3 * 1000;
+  const colors = ["#d6fd70", "#ebf213", "#14210a", "#ffffff"];
+
+  const frame = () => {
+    if (Date.now() > end) return;
+
+    confettiRef.current?.fire({
+      particleCount: 2,
+      angle: 60,
+      spread: 55,
+      startVelocity: 60,
+      origin: { x: 0, y: 0.5 },
+      colors,
+    });
+    confettiRef.current?.fire({
+      particleCount: 2,
+      angle: 120,
+      spread: 55,
+      startVelocity: 60,
+      origin: { x: 1, y: 0.5 },
+      colors,
+    });
+
+    requestAnimationFrame(frame);
+  };
+
+  frame();
+}
+
 export default function ThankYouContent() {
+  const confettiRef = useRef<ConfettiRef>(null);
+
   useEffect(() => {
     fireLeadConversion();
+    fireFireworks(confettiRef);
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-bg px-5 py-20 text-center">
+    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-bg px-5 py-20 text-center">
+      <Confetti
+        ref={confettiRef}
+        manualstart
+        className="pointer-events-none absolute inset-0 z-0 size-full"
+      />
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="flex max-w-md flex-col items-center"
+        className="relative z-10 flex max-w-md flex-col items-center"
       >
         <span className="flex size-16 items-center justify-center rounded-full bg-accent/20">
           <CheckCircle size={36} weight="fill" className="text-accent-ink" />
