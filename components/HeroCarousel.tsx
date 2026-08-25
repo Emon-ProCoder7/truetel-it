@@ -7,15 +7,21 @@ import { HERO_CAROUSEL_CARDS, RATING } from "@/lib/site";
 
 type CardData = (typeof HERO_CAROUSEL_CARDS)[number];
 
+/** Every card renders inside the same fixed box — a uniform card size is
+ * what makes the ring read as a smooth cylinder instead of a jagged one. */
+const CARD_W = 180;
+const CARD_H = 140;
+const cardBox = "w-[180px] h-[140px] rounded-2xl shadow-xl overflow-hidden";
+
 function Card({ card }: { card: CardData }) {
   if (card.kind === "financial") {
     return (
-      <div className="w-40 shrink-0 rounded-2xl bg-white p-3.5 shadow-xl">
+      <div className={`${cardBox} bg-white p-3.5`}>
         <div className="text-[0.65rem] text-ink-faint">{card.label}</div>
-        <div className="mt-0.5 text-base font-bold text-ink">
+        <div className="mt-1 text-base font-bold text-ink">
           ${card.value.toLocaleString()} <span className="text-xs font-normal text-ink-faint">/ ${card.target.toLocaleString()}</span>
         </div>
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-bg-soft">
+        <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-bg-soft">
           <div className="h-full rounded-full bg-accent" style={{ width: `${card.percent}%` }} />
         </div>
       </div>
@@ -24,22 +30,22 @@ function Card({ card }: { card: CardData }) {
 
   if (card.kind === "photo") {
     return (
-      <div className="relative h-40 w-32 shrink-0 overflow-hidden rounded-2xl shadow-xl">
-        <Image src={card.image} alt="" fill sizes="128px" className="object-cover" />
+      <div className={`${cardBox} relative`}>
+        <Image src={card.image} alt="" fill sizes={`${CARD_W}px`} className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-        <span className="absolute bottom-2 left-2 right-2 text-[0.65rem] font-medium leading-tight text-white">{card.caption}</span>
+        <span className="absolute bottom-2.5 left-2.5 right-2.5 text-[0.65rem] font-medium leading-tight text-white">{card.caption}</span>
       </div>
     );
   }
 
   if (card.kind === "chart") {
     return (
-      <div className="w-40 shrink-0 rounded-2xl bg-white p-3.5 shadow-xl">
+      <div className={`${cardBox} bg-white p-3.5`}>
         <div className="flex items-center justify-between text-[0.65rem] text-ink-faint">
           <span>{card.label}</span>
           <TrendUp size={12} weight="bold" className="text-accent" />
         </div>
-        <svg viewBox="0 0 120 40" className="mt-2 h-10 w-full">
+        <svg viewBox="0 0 120 40" className="mt-3 h-11 w-full">
           <polyline points="0,32 20,26 40,28 60,18 80,20 100,8 120,10" fill="none" stroke="#b8874a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
@@ -48,19 +54,19 @@ function Card({ card }: { card: CardData }) {
 
   if (card.kind === "dark") {
     return (
-      <div className="flex h-40 w-40 shrink-0 flex-col justify-between rounded-2xl bg-ink p-4 text-white shadow-xl">
+      <div className={`${cardBox} flex flex-col justify-between bg-ink p-3.5 text-white`}>
         <span className="flex size-6 items-center justify-center rounded-full bg-accent/90">
           <Star size={12} weight="fill" className="text-accent-ink" />
         </span>
-        <p className="text-sm font-semibold leading-snug">{card.text}</p>
+        <p className="text-[0.85rem] font-semibold leading-snug">{card.text}</p>
       </div>
     );
   }
 
   if (card.kind === "app") {
     return (
-      <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-2xl shadow-xl">
-        <Image src={card.image} alt="" fill sizes="128px" className="object-cover" />
+      <div className={`${cardBox} relative`}>
+        <Image src={card.image} alt="" fill sizes={`${CARD_W}px`} className="object-cover" />
         <div className="absolute inset-0 bg-black/25" />
         <div className="absolute inset-0 flex flex-col items-start justify-center gap-1.5 p-2.5">
           {card.pills.map((p) => (
@@ -73,9 +79,9 @@ function Card({ card }: { card: CardData }) {
 
   // bars
   return (
-    <div className="w-40 shrink-0 rounded-2xl bg-white p-3.5 shadow-xl">
+    <div className={`${cardBox} bg-white p-3.5`}>
       <div className="text-[0.65rem] text-ink-faint">{card.label}</div>
-      <div className="mt-2 flex h-10 items-end gap-1">
+      <div className="mt-3 flex h-11 items-end gap-1">
         {[30, 45, 40, 60, 75, 65, 90].map((h, i) => (
           <div key={i} className="flex-1 rounded-t-sm bg-accent" style={{ height: `${h}%` }} />
         ))}
@@ -84,15 +90,15 @@ function Card({ card }: { card: CardData }) {
   );
 }
 
-/* ---- Geometry — matches the specified architecture exactly ---------------- */
-const RADIUS = 750;
-const ANGLE_STEP = 18;
-const TOTAL_SLOTS = 360 / ANGLE_STEP; // 20
+/* ---- Geometry — precise cylindrical-arc blueprint -------------------------- */
+const RADIUS = 520;
+const ANGLE_STEP = 22.5;
+const TOTAL_SLOTS = 360 / ANGLE_STEP; // 16
 const RING_CARDS = Array.from({ length: TOTAL_SLOTS }, (_, i) => HERO_CAROUSEL_CARDS[i % HERO_CAROUSEL_CARDS.length]);
-const DEG_PER_FRAME = 0.045; // slow, perpetual spin
+const DEG_PER_FRAME = 0.11; // faster perpetual spin
 
-const VISIBLE_WINDOW = 70; // beyond this, a card is fully hidden
-const FADE_START = 45; // fade begins here, reaching 0 at VISIBLE_WINDOW
+const VISIBLE_WINDOW = 65; // beyond this, a card is fully hidden
+const FADE_START = 42; // fade begins here, reaching 0 at VISIBLE_WINDOW
 
 function normalizedAngle(combined: number) {
   const wrapped = ((combined % 360) + 360) % 360;
@@ -107,9 +113,11 @@ function visibilityFor(normalized: number) {
 
 /**
  * Cards arranged around a continuously auto-rotating 3D cylinder (runs on
- * its own — no scroll or drag dependency). Only the front-facing ±70° arc
- * is ever visible — cards rotating into the back half fade out and lose
- * pointer events instead of cluttering the view.
+ * its own — no scroll or drag dependency). Every wrapper between the
+ * perspective root and the cards carries `preserve-3d` so the 3D space
+ * never collapses flat; each card is positioned with a single unified
+ * `rotateY() translateZ()` transform — no secondary 2D offset layer.
+ * Only the front-facing +/-65deg arc is ever visible.
  */
 export default function HeroCarousel() {
   const ringRef = useRef<HTMLDivElement>(null);
@@ -147,8 +155,8 @@ export default function HeroCarousel() {
 
   return (
     <div className="relative z-10 w-full pb-8 pt-2 sm:pb-10">
-      <div className="relative h-[480px] w-full overflow-hidden" style={{ perspective: 2500 }}>
-        <div className="absolute inset-0" style={{ transformStyle: "preserve-3d", transform: "rotateX(12deg)" }}>
+      <div className="relative h-[340px] w-full overflow-hidden" style={{ perspective: 1800, transformStyle: "preserve-3d" }}>
+        <div className="absolute inset-0" style={{ transformStyle: "preserve-3d", transform: "rotateX(10deg)" }}>
           <div ref={ringRef} className="absolute inset-0" style={{ transformStyle: "preserve-3d" }}>
             {RING_CARDS.map((card, i) => (
               <div
@@ -156,14 +164,17 @@ export default function HeroCarousel() {
                 ref={(el) => { itemRefs.current[i] = el; }}
                 className="absolute left-1/2 top-1/2"
                 style={{
+                  width: CARD_W,
+                  height: CARD_H,
+                  marginLeft: -CARD_W / 2,
+                  marginTop: -CARD_H / 2,
                   transform: `rotateY(${i * ANGLE_STEP}deg) translateZ(${RADIUS}px)`,
+                  transformStyle: "preserve-3d",
                   backfaceVisibility: "hidden",
                   WebkitBackfaceVisibility: "hidden",
                 }}
               >
-                <div className="-translate-x-1/2 -translate-y-1/2">
-                  <Card card={card} />
-                </div>
+                <Card card={card} />
               </div>
             ))}
           </div>
