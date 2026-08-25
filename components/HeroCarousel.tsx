@@ -10,8 +10,8 @@ type CardData = (typeof HERO_CAROUSEL_CARDS)[number];
 /** Every card renders inside the same fixed box — a uniform card size is
  * what makes the ring read as a smooth cylinder instead of a jagged one. */
 const CARD_W = 180;
-const CARD_H = 140;
-const cardBox = "w-[180px] h-[140px] rounded-2xl shadow-xl overflow-hidden";
+const CARD_H = 125;
+const cardBox = "w-[180px] h-[125px] rounded-2xl shadow-xl overflow-hidden";
 
 function Card({ card }: { card: CardData }) {
   if (card.kind === "financial") {
@@ -154,8 +154,8 @@ export default function HeroCarousel() {
   }, []);
 
   return (
-    <div className="relative z-10 w-full pb-8 pt-2 sm:pb-10">
-      <div className="relative h-[340px] w-full overflow-hidden" style={{ perspective: 1800, transformStyle: "preserve-3d" }}>
+    <div className="relative z-10 w-full pb-8 pt-16 sm:pb-10">
+      <div className="relative h-[380px] w-full overflow-hidden" style={{ perspective: 1800, transformStyle: "preserve-3d" }}>
         <div className="absolute inset-0" style={{ transformStyle: "preserve-3d", transform: "rotateX(10deg)" }}>
           <div ref={ringRef} className="absolute inset-0" style={{ transformStyle: "preserve-3d" }}>
             {RING_CARDS.map((card, i) => (
