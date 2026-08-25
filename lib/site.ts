@@ -44,23 +44,17 @@ export const RATING = {
   mock: true,
 };
 
-/** 3-track infinite carousel content, per the hero brief. */
-export const HERO_CAROUSEL = [
-  {
-    speed: 46,
-    tone: "light" as const,
-    items: ["Automated Patch Management", "Cloud Phone / VoIP Setup", "MS 365 Security Audit"],
-  },
-  {
-    speed: 34,
-    tone: "accent" as const,
-    items: ["24/7 IT Helpdesk Support", "Zero-Trust Cybersecurity", "Network Infrastructure"],
-  },
-  {
-    speed: 52,
-    tone: "light" as const,
-    items: ["Disaster Recovery", "Teams Integration", "Managed Backup & Restore"],
-  },
+/** Single-row infinite hero carousel — varied card templates in a gentle
+ * perspective arc, matching the reference's card strip (not repeated pills). */
+export const HERO_CAROUSEL_CARDS = [
+  { kind: "financial" as const, label: "Monthly IT spend", value: 4900, target: 10000, percent: 49, rotate: -7 },
+  { kind: "photo" as const, image: "/assets/founder-portrait.png", caption: "Melbourne-based team", rotate: 4 },
+  { kind: "chart" as const, label: "VoIP uptime trend", rotate: -3 },
+  { kind: "dark" as const, text: "Managed IT that just works", rotate: 6 },
+  { kind: "app" as const, image: "/assets/service-managed-it.png", pills: ["Monitoring", "Helpdesk"], rotate: -5 },
+  { kind: "bars" as const, label: "Tickets resolved", rotate: 3 },
+  { kind: "photo" as const, image: "/assets/client-portrait-1.png", caption: "Real Melbourne businesses", rotate: -6 },
+  { kind: "dark" as const, text: "One partner. Zero finger-pointing.", rotate: 5 },
 ];
 
 /* ---- Trust strip (industries) ----------------------------------------- */
