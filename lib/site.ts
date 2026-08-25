@@ -185,12 +185,3 @@ export const FAQ = [
     a: "A 30-minute call where we learn what's running, what's broken, and what you wish was different. No sales script. You get a written plan with timelines and prices afterwards — no obligation to proceed.",
   },
 ];
-
-/* ---- Lead form ------------------------------------------------------------ */
-
-export const FORM_FIELDS = [
-  { name: "firstName", label: "First name", type: "text", placeholder: "Alex", autoComplete: "given-name" },
-  { name: "businessEmail", label: "Business email", type: "email", placeholder: "alex@yourcompany.com.au", autoComplete: "email" },
-  { name: "phone", label: "Phone", type: "tel", placeholder: "0400 000 000", autoComplete: "tel" },
-  { name: "businessAndSize", label: "Business name & size", type: "text", placeholder: "Acme Logistics, 12 staff", autoComplete: "organization" },
-] as const;
