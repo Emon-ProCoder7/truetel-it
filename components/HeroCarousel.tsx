@@ -9,19 +9,19 @@ type CardData = (typeof HERO_CAROUSEL_CARDS)[number];
 
 /** Every card renders inside the same fixed box — a uniform card size is
  * what makes the ring read as a smooth cylinder instead of a jagged one. */
-const CARD_W = 180;
-const CARD_H = 125;
-const cardBox = "w-[180px] h-[125px] rounded-2xl shadow-xl overflow-hidden";
+const CARD_W = 135;
+const CARD_H = 95;
+const cardBox = "w-[135px] h-[95px] rounded-2xl shadow-xl overflow-hidden";
 
 function Card({ card }: { card: CardData }) {
   if (card.kind === "financial") {
     return (
-      <div className={`${cardBox} bg-white p-3.5`}>
-        <div className="text-[0.65rem] text-ink-faint">{card.label}</div>
-        <div className="mt-1 text-base font-bold text-ink">
-          ${card.value.toLocaleString()} <span className="text-xs font-normal text-ink-faint">/ ${card.target.toLocaleString()}</span>
+      <div className={`${cardBox} bg-white p-2.5`}>
+        <div className="text-[0.6rem] text-ink-faint">{card.label}</div>
+        <div className="mt-0.5 text-sm font-bold text-ink">
+          ${card.value.toLocaleString()} <span className="text-[0.65rem] font-normal text-ink-faint">/ ${card.target.toLocaleString()}</span>
         </div>
-        <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-bg-soft">
+        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-bg-soft">
           <div className="h-full rounded-full bg-accent" style={{ width: `${card.percent}%` }} />
         </div>
       </div>
@@ -33,19 +33,19 @@ function Card({ card }: { card: CardData }) {
       <div className={`${cardBox} relative`}>
         <Image src={card.image} alt="" fill sizes={`${CARD_W}px`} className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-        <span className="absolute bottom-2.5 left-2.5 right-2.5 text-[0.65rem] font-medium leading-tight text-white">{card.caption}</span>
+        <span className="absolute bottom-1.5 left-1.5 right-1.5 text-[0.6rem] font-medium leading-tight text-white">{card.caption}</span>
       </div>
     );
   }
 
   if (card.kind === "chart") {
     return (
-      <div className={`${cardBox} bg-white p-3.5`}>
-        <div className="flex items-center justify-between text-[0.65rem] text-ink-faint">
+      <div className={`${cardBox} bg-white p-2.5`}>
+        <div className="flex items-center justify-between text-[0.6rem] text-ink-faint">
           <span>{card.label}</span>
-          <TrendUp size={12} weight="bold" className="text-accent" />
+          <TrendUp size={11} weight="bold" className="text-accent" />
         </div>
-        <svg viewBox="0 0 120 40" className="mt-3 h-11 w-full">
+        <svg viewBox="0 0 120 40" className="mt-1.5 h-7 w-full">
           <polyline points="0,32 20,26 40,28 60,18 80,20 100,8 120,10" fill="none" stroke="#b8874a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
@@ -54,11 +54,11 @@ function Card({ card }: { card: CardData }) {
 
   if (card.kind === "dark") {
     return (
-      <div className={`${cardBox} flex flex-col justify-between bg-ink p-3.5 text-white`}>
-        <span className="flex size-6 items-center justify-center rounded-full bg-accent/90">
-          <Star size={12} weight="fill" className="text-accent-ink" />
+      <div className={`${cardBox} flex flex-col justify-between bg-ink p-2.5 text-white`}>
+        <span className="flex size-5 items-center justify-center rounded-full bg-accent/90">
+          <Star size={10} weight="fill" className="text-accent-ink" />
         </span>
-        <p className="text-[0.85rem] font-semibold leading-snug">{card.text}</p>
+        <p className="text-xs font-semibold leading-snug">{card.text}</p>
       </div>
     );
   }
@@ -68,9 +68,9 @@ function Card({ card }: { card: CardData }) {
       <div className={`${cardBox} relative`}>
         <Image src={card.image} alt="" fill sizes={`${CARD_W}px`} className="object-cover" />
         <div className="absolute inset-0 bg-black/25" />
-        <div className="absolute inset-0 flex flex-col items-start justify-center gap-1.5 p-2.5">
+        <div className="absolute inset-0 flex flex-col items-start justify-center gap-1 p-2">
           {card.pills.map((p) => (
-            <span key={p} className="rounded-full bg-white/90 px-2 py-1 text-[0.6rem] font-medium text-ink shadow-sm">{p}</span>
+            <span key={p} className="rounded-full bg-white/90 px-1.5 py-0.5 text-[0.55rem] font-medium text-ink shadow-sm">{p}</span>
           ))}
         </div>
       </div>
@@ -79,9 +79,9 @@ function Card({ card }: { card: CardData }) {
 
   // bars
   return (
-    <div className={`${cardBox} bg-white p-3.5`}>
-      <div className="text-[0.65rem] text-ink-faint">{card.label}</div>
-      <div className="mt-3 flex h-11 items-end gap-1">
+    <div className={`${cardBox} bg-white p-2.5`}>
+      <div className="text-[0.6rem] text-ink-faint">{card.label}</div>
+      <div className="mt-1.5 flex h-7 items-end gap-1">
         {[30, 45, 40, 60, 75, 65, 90].map((h, i) => (
           <div key={i} className="flex-1 rounded-t-sm bg-accent" style={{ height: `${h}%` }} />
         ))}
