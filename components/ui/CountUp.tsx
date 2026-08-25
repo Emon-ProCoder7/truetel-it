@@ -29,7 +29,10 @@ export default function CountUp({ value, prefix = "", suffix = "", className }: 
         ease: "expo.out",
         scrollTrigger: { trigger: el, start: "top 90%", once: true },
         onUpdate: () => {
-          el.textContent = `${prefix}${obj.n.toFixed(decimals)}${suffix}`;
+          const formatted = decimals
+            ? obj.n.toFixed(decimals)
+            : Math.round(obj.n).toLocaleString("en-AU");
+          el.textContent = `${prefix}${formatted}${suffix}`;
         },
       });
     },

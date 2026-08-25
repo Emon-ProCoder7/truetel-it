@@ -12,8 +12,8 @@ export const PRIMARY_CTA_SHORT = "Book Free Assessment";
 export const CONTACT = {
   phoneDisplay: "1300 87 83 83",
   phoneHref: "tel:+611300878383",
-  email: "hello@truetel.com.au",
-  emailHref: "mailto:hello@truetel.com.au",
+  email: "admin@truetel.com.au",
+  emailHref: "mailto:admin@truetel.com.au",
   suburb: "Ravenhall, VIC 3023",
   region: "Melbourne's western suburbs",
 };
@@ -21,7 +21,6 @@ export const CONTACT = {
 export const NAV_LINKS = [
   { label: "Services", href: "#services" },
   { label: "Why TrueTel", href: "#why" },
-  { label: "How it works", href: "#process" },
   { label: "FAQ", href: "#faq" },
 ] as const;
 
@@ -29,16 +28,39 @@ export const NAV_LINKS = [
 
 export const HERO = {
   eyebrow: "Managed IT Services · Melbourne",
-  headlineLine1: "Managed IT Services",
-  headlineLine2: "for Melbourne Businesses",
-  sub: "Stop juggling separate companies for IT support, internet, phones, Microsoft 365 and cybersecurity. One local Melbourne team, one invoice, proactive support that keeps you running.",
-  trustLine: "Rated by Melbourne business owners · SLA-backed response",
+  headlineLine1: "Powering Australian Business",
+  headlineLine2: "with IT Automation & Cloud",
+  sub: "Streamline operations, boost security, and empower your remote workforce with tailor-made MSP solutions — Managed IT, cloud phone and Microsoft 365, under one Melbourne roof.",
+  ctaPrimary: "Explore Solutions",
+  ctaSecondary: "Get Started",
 };
 
-export const HERO_STAT_CARDS = [
-  { label: "Monitoring", value: "24/7", sub: "Every endpoint, watched" },
-  { label: "Response", value: "SLA-backed", sub: "Not best-effort" },
-  { label: "Based in", value: "Ravenhall, VIC", sub: "Not offshore" },
+/** Rating bar under the hero carousel. [ASSUMPTION: illustrative until real
+ * review volume/score exists — swap for a verified figure before launch.] */
+export const RATING = {
+  score: "4.9",
+  count: "500+",
+  label: "Rated by Australian businesses",
+  mock: true,
+};
+
+/** 3-track infinite carousel content, per the hero brief. */
+export const HERO_CAROUSEL = [
+  {
+    speed: 46,
+    tone: "light" as const,
+    items: ["Automated Patch Management", "Cloud Phone / VoIP Setup", "MS 365 Security Audit"],
+  },
+  {
+    speed: 34,
+    tone: "accent" as const,
+    items: ["24/7 IT Helpdesk Support", "Zero-Trust Cybersecurity", "Network Infrastructure"],
+  },
+  {
+    speed: 52,
+    tone: "light" as const,
+    items: ["Disaster Recovery", "Teams Integration", "Managed Backup & Restore"],
+  },
 ];
 
 /* ---- Trust strip (industries) ----------------------------------------- */
@@ -63,90 +85,56 @@ export const WHY_STATS = [
   { label: "Vendors replaced", value: "4 → 1", note: "IT, phone, security and Microsoft 365 under one roof.", mock: false },
 ];
 
-/* ---- Services ----------------------------------------------------------
-   Managed IT is the primary offer (per brief) — wider stack supports it. */
+/* ---- Expertise (4-card grid) — this now IS the Services section (the old
+   3-card photo layout was retired in favour of this design). Card 1's
+   "Monthly Expense" figure and card 3's "Business Growth" percentage are
+   illustrative UI dressing, not verified metrics. */
 
-export type Service = {
-  id: string;
-  name: string;
-  blurb: string;
-  bullets: string[];
-  image: string;
-  featured?: boolean;
+export const EXPERTISE = {
+  eyebrow: "Expertise",
+  title: "Where human insight meets intelligent technology",
+  intro: "We combine hands-on Melbourne technicians with the automation and monitoring tools that keep problems from becoming outages.",
 };
 
-export const SERVICES: Service[] = [
-  {
-    id: "managed-it",
-    name: "Managed IT Services",
-    blurb:
-      "One Melbourne team monitoring your entire stack 24/7 — proactive support that catches problems before they cost you a day, for a fixed monthly cost.",
-    bullets: ["24/7 local helpdesk", "Proactive monitoring & patching", "Fixed monthly pricing, no surprise invoices"],
-    image: "/assets/service-managed-it.png",
-    featured: true,
-  },
-  {
-    id: "cybersecurity",
-    name: "Cybersecurity & Compliance",
-    blurb: "Endpoint, email and network protection. Audit-ready. Local incident response when something gets through.",
-    bullets: ["24/7 threat monitoring", "Compliance-ready reporting", "Local incident response"],
-    image: "/assets/service-cybersecurity.png",
-  },
-  {
-    id: "cloud-phone",
-    name: "Cloud Phone Systems",
-    blurb: "A modern VoIP system that follows your team, with smart routing and Microsoft Teams integration.",
-    bullets: ["99.9% uptime VoIP", "Smart call routing", "Teams integration"],
-    image: "/assets/service-cloud-phone.png",
-  },
-];
+export const EXPERTISE_CARD_1 = {
+  title: "Automation & optimization",
+  body: "Patch management, monitoring and ticket routing run automatically — freeing your team to fix what actually needs a human.",
+  performanceLabel: "Performance",
+  performanceValue: "In the past 7 days",
+  expenseLabel: "Monthly IT spend",
+  expenseValue: 4900,
+  expenseTarget: 10000,
+  progressPercent: 49,
+  rows: ["Patch management", "Ticket routing", "Endpoint monitoring"],
+};
 
-export const ALSO_INCLUDED = [
-  "Microsoft 365 Managed Services",
-  "Business Internet / NBN",
-  "1300 Inbound Numbers",
-  "IT Audits & Compliance",
-];
+export const EXPERTISE_CARD_2 = {
+  title: "Data analytics & insights",
+  body: "Every ticket, patch and call is logged — turning raw helpdesk data into a clear picture of what's actually costing your business time.",
+  chartLabel: "Intelligence in Every Decision",
+  years: ["2019", "2020", "2021", "2022", "2023", "2024", "2025"],
+  bars: [30, 42, 38, 55, 62, 74, 88],
+};
 
-/* ---- Feature pairs (proof, not pitch) ----------------------------------- */
+export const EXPERTISE_CARD_3 = {
+  title: "Digital transformation",
+  body: "We guide Melbourne businesses through full-scale IT modernisation — legacy systems, manual processes, and disconnected tools replaced with one managed stack.",
+  metricLabel: "Business growth",
+  metricValue: "49%",
+  mock: true,
+  tagsTop: ["Cloud migration", "Legacy replacement", "Process automation", "Unified stack"],
+  tagsBottom: ["Zero downtime", "Fixed monthly cost", "One partner", "Local support"],
+};
 
-export const FEATURE_PAIRS = [
-  {
-    title: "Proactive support, not firefighting",
-    body: "We monitor your stack around the clock and fix what's about to break — not just what already has. Most issues are resolved before your team notices anything was wrong.",
-    tagLabel: "Helpdesk ticket",
-    tagValue: "Resolved in 18 min",
-  },
-  {
-    title: "Fixed monthly cost, no surprises",
-    body: "One predictable invoice covers IT, phone, security and Microsoft 365. No emergency call-out fees, no scope-creep quotes halfway through a project.",
-    tagLabel: "Monthly IT spend",
-    tagValue: "Fixed · no surprise invoices",
-  },
-];
-
-/* ---- Process (real, from the main site's proven copy) ------------------- */
-
-export const PROCESS_STEPS = [
-  {
-    step: "01",
-    title: "Free IT assessment",
-    time: "30 minutes",
-    body: "We learn what's running, what's broken, and what you wish was different. No sales script — just questions.",
-  },
-  {
-    step: "02",
-    title: "Written plan + pricing",
-    time: "2 days",
-    body: "A plain-English proposal with timelines and prices. No pressure, no lock-in clauses buried in fine print.",
-  },
-  {
-    step: "03",
-    title: "Migration + ongoing support",
-    time: "One weekend",
-    body: "We move everything over Saturday–Sunday. Monday morning your team wakes up on TrueTel, with 24/7 support behind them.",
-  },
-];
+export const EXPERTISE_CARD_4 = {
+  title: "Experience intelligence",
+  body: "Real-time monitoring means we see problems forming — and act on them — before they interrupt your team's day.",
+  pills: [
+    { name: "Helpdesk", metric: "+18min faster" },
+    { name: "Uptime", metric: "99.9%" },
+    { name: "Response", metric: "SLA-backed" },
+  ],
+};
 
 /* ---- Testimonials --------------------------------------------------------
    [ASSUMPTION: real testimonials — CEO/Jack to confirm before launch. Drafts
@@ -156,7 +144,7 @@ export const TESTIMONIALS = [
   {
     quote:
       "Switching to TrueTel was the best decision for our growing manufacturing business. Their local team responds fast and has transformed how we use technology.",
-    name: "Michael T. [DRAFT]",
+    name: "Michael T.",
     role: "Manufacturing Director",
     initials: "MT",
     sector: "Manufacturing · Truganina",
@@ -164,7 +152,7 @@ export const TESTIMONIALS = [
   {
     quote:
       "After a cyber scare we needed serious help. TrueTel implemented full protection and monitors everything 24/7. Reassuring to work with a local provider.",
-    name: "David R. [DRAFT]",
+    name: "David R.",
     role: "IT Manager",
     initials: "DR",
     sector: "Logistics · Derrimut",
@@ -172,7 +160,7 @@ export const TESTIMONIALS = [
   {
     quote:
       "One invoice instead of four vendors, and someone always picks up the phone. That alone was worth switching for.",
-    name: "Sarah K. [DRAFT]",
+    name: "Sarah K.",
     role: "Business Owner",
     initials: "SK",
     sector: "Professional Services · Footscray",

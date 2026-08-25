@@ -1,9 +1,7 @@
 import Hero from "@/components/Hero";
 import LogoMarquee from "@/components/LogoMarquee";
 import WhyStats from "@/components/WhyStats";
-import Services from "@/components/Services";
-import FeaturePairs from "@/components/FeaturePairs";
-import Process from "@/components/Process";
+import ExpertiseGrid from "@/components/ExpertiseGrid";
 import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
 import LeadForm from "@/components/LeadForm";
@@ -18,9 +16,7 @@ export default function Home() {
         <Hero />
         <LogoMarquee />
         <WhyStats />
-        <Services />
-        <FeaturePairs />
-        <Process />
+        <ExpertiseGrid />
         <Testimonials />
         <FAQ />
         <LeadForm />
