@@ -84,26 +84,61 @@ function Card({ card }: { card: CardData }) {
   );
 }
 
-const RING_CARDS = [...HERO_CAROUSEL_CARDS, ...HERO_CAROUSEL_CARDS];
-const RADIUS = 300;
-const ANGLE_STEP = 360 / RING_CARDS.length;
+/* ---- Geometry — matches the specified architecture exactly ---------------- */
+const RADIUS = 750;
+const ANGLE_STEP = 18;
+const TOTAL_SLOTS = 360 / ANGLE_STEP; // 20
+const RING_CARDS = Array.from({ length: TOTAL_SLOTS }, (_, i) => HERO_CAROUSEL_CARDS[i % HERO_CAROUSEL_CARDS.length]);
 const DEG_PER_FRAME = 0.045; // slow, perpetual spin
+
+const VISIBLE_WINDOW = 70; // beyond this, a card is fully hidden
+const FADE_START = 45; // fade begins here, reaching 0 at VISIBLE_WINDOW
+
+function normalizedAngle(combined: number) {
+  const wrapped = ((combined % 360) + 360) % 360;
+  return Math.abs(wrapped > 180 ? wrapped - 360 : wrapped);
+}
+
+function visibilityFor(normalized: number) {
+  if (normalized > VISIBLE_WINDOW) return 0;
+  if (normalized > FADE_START) return 1 - (normalized - FADE_START) / (VISIBLE_WINDOW - FADE_START);
+  return 1;
+}
 
 /**
  * Cards arranged around a continuously auto-rotating 3D cylinder (runs on
- * its own — no scroll dependency), tilted back slightly so the front-facing
- * cards read higher than the ones curving away at the sides.
+ * its own — no scroll or drag dependency). Only the front-facing ±70° arc
+ * is ever visible — cards rotating into the back half fade out and lose
+ * pointer events instead of cluttering the view.
  */
 export default function HeroCarousel() {
   const ringRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let angle = 0;
+
+    const applyVisibility = () => {
+      itemRefs.current.forEach((el, i) => {
+        if (!el) return;
+        const normalized = normalizedAngle(angle + i * ANGLE_STEP);
+        const v = visibilityFor(normalized);
+        el.style.opacity = String(v);
+        el.style.pointerEvents = v === 0 ? "none" : "auto";
+      });
+    };
+
+    if (reduce) {
+      applyVisibility();
+      return;
+    }
+
     let raf = 0;
     const tick = () => {
       angle += DEG_PER_FRAME;
       if (ringRef.current) ringRef.current.style.transform = `rotateY(${angle}deg)`;
+      applyVisibility();
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -111,15 +146,20 @@ export default function HeroCarousel() {
   }, []);
 
   return (
-    <div className="relative z-10 pb-8 pt-2 sm:pb-10">
-      <div className="relative h-[210px] overflow-hidden" style={{ perspective: 1400 }}>
-        <div className="absolute inset-0" style={{ transformStyle: "preserve-3d", transform: "rotateX(8deg)" }}>
+    <div className="relative z-10 w-full pb-8 pt-2 sm:pb-10">
+      <div className="relative h-[480px] w-full overflow-hidden" style={{ perspective: 2500 }}>
+        <div className="absolute inset-0" style={{ transformStyle: "preserve-3d", transform: "rotateX(12deg)" }}>
           <div ref={ringRef} className="absolute inset-0" style={{ transformStyle: "preserve-3d" }}>
             {RING_CARDS.map((card, i) => (
               <div
                 key={i}
+                ref={(el) => { itemRefs.current[i] = el; }}
                 className="absolute left-1/2 top-1/2"
-                style={{ transform: `rotateY(${i * ANGLE_STEP}deg) translateZ(${RADIUS}px)` }}
+                style={{
+                  transform: `rotateY(${i * ANGLE_STEP}deg) translateZ(${RADIUS}px)`,
+                  backfaceVisibility: "hidden",
+                  WebkitBackfaceVisibility: "hidden",
+                }}
               >
                 <div className="-translate-x-1/2 -translate-y-1/2">
                   <Card card={card} />
