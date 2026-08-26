@@ -10,7 +10,7 @@ const jakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://truetel.com.au/managed-it-services/";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://managed-it.truetel.com.au";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
