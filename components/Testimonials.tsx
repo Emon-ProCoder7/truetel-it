@@ -28,10 +28,6 @@ export default function Testimonials() {
           </Reveal>
         ))}
       </div>
-
-      <p className="mx-auto mt-6 max-w-5xl text-center text-xs text-ink-faint">
-        [ASSUMPTION: real testimonials &amp; names — Jack to confirm before launch. Drafts shown, clearly marked.]
-      </p>
     </section>
   );
 }
