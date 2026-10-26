@@ -14,6 +14,7 @@ type Draft = {
   subhead: string;
   serviceTag: string;
   workflowNodes: { icon: string; label: string }[];
+  systemSignals: { icon: string; label: string }[];
   impactSentence: string;
   captionFacebook: string;
   captionInstagram: string;
@@ -579,6 +580,17 @@ export default function EodStoryPortal() {
                             </span>
                             {i < d.workflowNodes.length - 1 && <span className="text-ink-faint">→</span>}
                           </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {d.systemSignals?.some((s) => s.label) && (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-faint">System shown as:</span>
+                        {d.systemSignals.filter((s) => s.label).map((s, i) => (
+                          <span key={i} className="rounded-full bg-accent/15 px-2.5 py-1 text-[10px] font-semibold uppercase text-accent-ink">
+                            {s.label}
+                          </span>
                         ))}
                       </div>
                     )}
