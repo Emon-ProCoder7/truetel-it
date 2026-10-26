@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { Button, Eyebrow } from "@/components/ui/Kit";
 import SkyBackground from "@/components/ui/SkyBackground";
@@ -25,9 +25,10 @@ type Draft = {
 
 type Tab = "facebook" | "instagram" | "linkedin";
 
-type WeeklyDay = { date: string; summary: string };
-type WeeklyEmployee = { name: string; weekSummary: string; entryCount: number; days: WeeklyDay[] };
-type WeeklyReport = { weekStart: string; weekEnd: string; employees: WeeklyEmployee[] };
+type DayItem = { category: string; summary: string };
+type TimelineDay = { date: string; items: DayItem[] };
+type TimelineEmployee = { name: string; totalEntries: number; lastActivity: string | null; days: TimelineDay[] };
+type TimelineReport = { employees: TimelineEmployee[] };
 
 function LogoBadge() {
   return (
@@ -50,7 +51,7 @@ export default function EodStoryPortal() {
   const [tabByDraft, setTabByDraft] = useState<Record<string, Tab>>({});
   const [toast, setToast] = useState("");
 
-  const [weekly, setWeekly] = useState<WeeklyReport | null>(null);
+  const [weekly, setWeekly] = useState<TimelineReport | null>(null);
   const [weeklyLoading, setWeeklyLoading] = useState(false);
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
 
@@ -263,14 +264,12 @@ export default function EodStoryPortal() {
           <div className="card-accent mt-6 px-5 py-3 text-sm font-medium">{toast}</div>
         )}
 
-        {/* Weekly EOD report -- glanceable rollup for the exec, same source as the social drafts */}
+        {/* EOD timeline -- grows day by day, never resets to a fixed week; same source as the social drafts */}
         <section className="card mt-8 p-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <Eyebrow>Weekly EOD Report</Eyebrow>
-              <h2 className="text-display-sm mt-1 text-ink">
-                {weekly ? `${weekly.weekStart} to ${weekly.weekEnd}` : "Last 7 days"}
-              </h2>
+              <Eyebrow>EOD Timeline</Eyebrow>
+              <h2 className="text-display-sm mt-1 text-ink">Click an employee to see their day-by-day log</h2>
             </div>
             <button
               onClick={loadWeekly}
@@ -281,78 +280,70 @@ export default function EodStoryPortal() {
           </div>
 
           {!weekly && (
-            <p className="mt-4 text-sm text-ink-faint">{weeklyLoading ? "Loading…" : "Could not load the weekly report."}</p>
+            <p className="mt-4 text-sm text-ink-faint">{weeklyLoading ? "Loading…" : "Could not load the EOD timeline."}</p>
           )}
 
           {weekly && (
-            <div className="mt-5 overflow-x-auto">
-              <table className="w-full min-w-[640px] border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-ink-faint">
-                    <th className="pb-2 pr-4 font-semibold">Employee</th>
-                    <th className="pb-2 pr-4 font-semibold">This week, summarized</th>
-                    <th className="pb-2 pr-4 font-semibold">Entries</th>
-                    <th className="pb-2 font-semibold"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {weekly.employees.map((emp) => {
-                    const open = expandedEmployee === emp.name;
-                    return (
-                      <Fragment key={emp.name}>
-                        <tr className="border-b border-line align-top">
-                          <td className="py-3 pr-4 font-semibold text-ink whitespace-nowrap">{emp.name}</td>
-                          <td className="py-3 pr-4 text-ink-secondary">{emp.weekSummary}</td>
-                          <td className="py-3 pr-4">
-                            <span
-                              className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                                emp.entryCount > 0 ? "bg-accent text-accent-ink" : "bg-bg-soft text-ink-faint"
-                              }`}
-                            >
-                              {emp.entryCount}
-                            </span>
-                          </td>
-                          <td className="py-3 text-right">
-                            {emp.entryCount > 0 && (
-                              <button
-                                onClick={() => setExpandedEmployee(open ? null : emp.name)}
-                                className="text-xs font-semibold text-ink-secondary underline hover:text-ink"
-                              >
-                                {open ? "Hide days" : "Show days"}
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                        {open && (
-                          <tr className="border-b border-line bg-bg-soft/60">
-                            <td colSpan={4} className="px-2 py-3">
-                              <ul className="space-y-1.5">
-                                {emp.days
-                                  .filter((d) => d.summary)
-                                  .map((d) => (
-                                    <li key={d.date} className="flex gap-3 text-sm">
-                                      <span className="w-24 flex-shrink-0 font-mono text-xs text-ink-faint">{d.date}</span>
-                                      <span className="text-ink-secondary">{d.summary}</span>
-                                    </li>
-                                  ))}
-                                {emp.days.filter((d) => d.summary).length === 0 && (
-                                  <li className="text-sm text-ink-faint">No day-by-day detail recorded.</li>
-                                )}
-                              </ul>
-                            </td>
-                          </tr>
+            <div className="mt-5 divide-y divide-line">
+              {weekly.employees.map((emp) => {
+                const open = expandedEmployee === emp.name;
+                return (
+                  <div key={emp.name} className="py-3">
+                    <button
+                      onClick={() => emp.totalEntries > 0 && setExpandedEmployee(open ? null : emp.name)}
+                      className="flex w-full items-center justify-between gap-3 text-left"
+                      disabled={emp.totalEntries === 0}
+                    >
+                      <span className="font-semibold text-ink">{emp.name}</span>
+                      <span className="flex items-center gap-3 text-sm text-ink-faint">
+                        {emp.lastActivity && <span>last logged {emp.lastActivity}</span>}
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            emp.totalEntries > 0 ? "bg-accent text-accent-ink" : "bg-bg-soft text-ink-faint"
+                          }`}
+                        >
+                          {emp.totalEntries} {emp.totalEntries === 1 ? "entry" : "entries"}
+                        </span>
+                        {emp.totalEntries > 0 && (
+                          <span className="font-semibold text-ink-secondary">{open ? "Hide" : "View timeline"}</span>
                         )}
-                      </Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
+                      </span>
+                    </button>
+
+                    {open && (
+                      <div className="mt-3 space-y-4 rounded-2xl bg-bg-soft p-4">
+                        {emp.days.map((day) => (
+                          <div key={day.date}>
+                            <p className="font-mono text-xs font-semibold uppercase tracking-wide text-ink-faint">
+                              {new Date(day.date + "T00:00:00").toLocaleDateString("en-AU", {
+                                weekday: "long",
+                                day: "numeric",
+                                month: "short",
+                              })}
+                            </p>
+                            <ul className="mt-1.5 space-y-1.5">
+                              {day.items.map((item, i) => (
+                                <li key={i} className="flex gap-2 text-sm">
+                                  <span className="mt-0.5 flex-shrink-0 rounded-full border border-line-strong px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-ink-faint">
+                                    {item.category}
+                                  </span>
+                                  <span className="text-ink-secondary">{item.summary}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
           <p className="mt-4 text-xs text-ink-faint">
-            Rolling 7-day window from the same EOD log employees fill in for the social posts above. Older entries are
-            purged automatically once posted, so this table and the data store stay light.
+            Every day an EOD is logged, it's added here grouped by work category, so different projects never blur
+            into one summary. This keeps growing week over week from the same log the social posts draw from.
           </p>
         </section>
 
