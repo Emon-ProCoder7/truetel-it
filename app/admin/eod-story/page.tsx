@@ -30,6 +30,25 @@ type TimelineDay = { date: string; items: DayItem[] };
 type TimelineEmployee = { name: string; totalEntries: number; lastActivity: string | null; days: TimelineDay[] };
 type TimelineReport = { employees: TimelineEmployee[] };
 
+const ROSTER = ["Alvi", "Toby", "Sam", "Farhan", "Felix", "Mark", "Dex"];
+const ROLES = ["Technical", "Semi-technical", "Customer-facing"];
+const SERVICE_AREAS = ["Managed IT", "Cloud Phone", "AI Voice Agent (Zara)", "Cybersecurity", "Internal Ops", "Other"];
+
+const EMPTY_EOD_FORM = {
+  employeeName: "",
+  role: "",
+  serviceArea: "",
+  clientProject: "",
+  setting: "",
+  stakes: "",
+  action: "",
+  turningPoint: "",
+  result: "",
+  proof: "",
+  humanMoment: "",
+  visualCue: "",
+};
+
 function LogoBadge() {
   return (
     <span className="flex size-9 items-center justify-center rounded-full bg-white p-1.5 shadow-sm">
@@ -54,6 +73,10 @@ export default function EodStoryPortal() {
   const [weekly, setWeekly] = useState<TimelineReport | null>(null);
   const [weeklyLoading, setWeeklyLoading] = useState(false);
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
+
+  const [showEodForm, setShowEodForm] = useState(false);
+  const [eodForm, setEodForm] = useState(EMPTY_EOD_FORM);
+  const [submittingEod, setSubmittingEod] = useState(false);
 
   const loadDrafts = useCallback(async () => {
     setLoading(true);
@@ -113,14 +136,58 @@ export default function EodStoryPortal() {
     try {
       const res = await fetch("/api/eod-story/generate", { method: "POST" });
       const data = await res.json();
-      if (!res.ok) showToast(data.error || "Nothing to generate right now.");
-      else {
+      if (!res.ok || data.success === false) {
+        showToast(data.message || data.error || "Nothing to generate right now.");
+      } else {
         showToast("New draft generated.");
         await loadDrafts();
       }
     } finally {
       setGenerating(false);
     }
+  }
+
+  async function handleSubmitEod(e: React.FormEvent) {
+    e.preventDefault();
+    const required: (keyof typeof EMPTY_EOD_FORM)[] = [
+      "employeeName",
+      "role",
+      "serviceArea",
+      "setting",
+      "stakes",
+      "action",
+      "result",
+      "proof",
+    ];
+    const missing = required.filter((k) => !eodForm[k].trim());
+    if (missing.length > 0) {
+      showToast("Please fill in all the required fields first.");
+      return;
+    }
+
+    setSubmittingEod(true);
+    try {
+      const res = await fetch("/api/eod-story/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(eodForm),
+      });
+      const data = await res.json();
+      if (!res.ok || data.success === false) {
+        showToast(data.error || "Could not log that EOD entry.");
+      } else {
+        showToast("Logged. It'll feed the next generated post and the timeline below.");
+        setEodForm(EMPTY_EOD_FORM);
+        setShowEodForm(false);
+        await loadWeekly();
+      }
+    } finally {
+      setSubmittingEod(false);
+    }
+  }
+
+  function setEodField(field: keyof typeof EMPTY_EOD_FORM, value: string) {
+    setEodForm((prev) => ({ ...prev, [field]: value }));
   }
 
   async function handleRegenerate(draftId: string) {
@@ -247,9 +314,16 @@ export default function EodStoryPortal() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3 pt-1">
-              <Button variant="accent" onClick={handleGenerateNow} className={generating ? "opacity-60" : ""}>
-                {generating ? "Generating…" : "Generate New Post Now"}
+              <Button variant="accent" onClick={() => setShowEodForm((v) => !v)}>
+                {showEodForm ? "Close EOD Form" : "Log an EOD"}
               </Button>
+              <button
+                onClick={handleGenerateNow}
+                disabled={generating}
+                className="rounded-full border border-white/35 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 disabled:opacity-50"
+              >
+                {generating ? "Generating…" : "Generate New Post Now"}
+              </button>
               <button
                 onClick={loadDrafts}
                 className="rounded-full border border-white/35 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
@@ -262,6 +336,102 @@ export default function EodStoryPortal() {
 
         {toast && (
           <div className="card-accent mt-6 px-5 py-3 text-sm font-medium">{toast}</div>
+        )}
+
+        {showEodForm && (
+          <form onSubmit={handleSubmitEod} className="card mt-6 space-y-5 p-6">
+            <div>
+              <Eyebrow>Log an EOD</Eyebrow>
+              <h2 className="text-display-sm mt-1 text-ink">What did we get done today?</h2>
+              <p className="mt-1 text-sm text-ink-secondary">
+                A few short answers. This feeds the social story engine and the timeline below -- your name is
+                never published.
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-ink">Your name</span>
+                <select
+                  value={eodForm.employeeName}
+                  onChange={(e) => setEodField("employeeName", e.target.value)}
+                  className="w-full rounded-full border border-line-strong px-4 py-2.5 text-sm outline-none focus:border-ink"
+                >
+                  <option value="">Select…</option>
+                  {ROSTER.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-ink">Role</span>
+                <select
+                  value={eodForm.role}
+                  onChange={(e) => setEodField("role", e.target.value)}
+                  className="w-full rounded-full border border-line-strong px-4 py-2.5 text-sm outline-none focus:border-ink"
+                >
+                  <option value="">Select…</option>
+                  {ROLES.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-ink">Service area</span>
+                <select
+                  value={eodForm.serviceArea}
+                  onChange={(e) => setEodField("serviceArea", e.target.value)}
+                  className="w-full rounded-full border border-line-strong px-4 py-2.5 text-sm outline-none focus:border-ink"
+                >
+                  <option value="">Select…</option>
+                  {SERVICE_AREAS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-ink">Client or project (internal only, never published)</span>
+              <input
+                value={eodForm.clientProject}
+                onChange={(e) => setEodField("clientProject", e.target.value)}
+                className="w-full rounded-full border border-line-strong px-4 py-2.5 text-sm outline-none focus:border-ink"
+              />
+            </label>
+
+            {[
+              { key: "setting" as const, label: "The setting: what kind of business/site, and what was the situation when you started?", placeholder: "e.g. a 12-seat accounting office in Sunshine, phones had been dropping calls for a week" },
+              { key: "stakes" as const, label: "The stakes: what was at risk if this didn't get handled?" },
+              { key: "action" as const, label: "The action: in plain words, what did you actually do? (skip tool/software names)" },
+              { key: "turningPoint" as const, label: "The turning point: the moment it clicked, or the hardest part (optional)" },
+              { key: "result" as const, label: "The result: what's true now that wasn't true this morning?" },
+              { key: "proof" as const, label: "The proof: any real number, scale or timeframe that makes this concrete?", placeholder: "e.g. 3 sites, same-day fix, 40 staff back online" },
+              { key: "humanMoment" as const, label: "The human moment: anything the client/team actually said or did? (optional, only if real)" },
+              { key: "visualCue" as const, label: "Visual cue: if this were one photo, what would it look like? (optional)" },
+            ].map(({ key, label, placeholder }) => (
+              <label key={key} className="block text-sm">
+                <span className="mb-1 block font-medium text-ink">{label}</span>
+                <textarea
+                  value={eodForm[key]}
+                  onChange={(e) => setEodField(key, e.target.value)}
+                  placeholder={placeholder}
+                  rows={2}
+                  className="w-full rounded-2xl border border-line-strong px-4 py-3 text-sm outline-none focus:border-ink"
+                />
+              </label>
+            ))}
+
+            <Button type="submit" variant="dark" className={submittingEod ? "opacity-60" : ""}>
+              {submittingEod ? "Logging…" : "Submit EOD"}
+            </Button>
+          </form>
         )}
 
         {/* EOD timeline -- grows day by day, never resets to a fixed week; same source as the social drafts */}
