@@ -13,7 +13,8 @@ type Draft = {
   headlineGold: string;
   subhead: string;
   serviceTag: string;
-  impacts: { icon: string; text: string }[];
+  workflowNodes: { icon: string; label: string }[];
+  impactSentence: string;
   captionFacebook: string;
   captionInstagram: string;
   captionLinkedin: string;
@@ -64,7 +65,6 @@ export default function EodStoryPortal() {
 
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(false);
-  const [generating, setGenerating] = useState(false);
   const [busyDraftId, setBusyDraftId] = useState<string | null>(null);
   const [feedbackByDraft, setFeedbackByDraft] = useState<Record<string, string>>({});
   const [tabByDraft, setTabByDraft] = useState<Record<string, Tab>>({});
@@ -131,22 +131,6 @@ export default function EodStoryPortal() {
     }
   }
 
-  async function handleGenerateNow() {
-    setGenerating(true);
-    try {
-      const res = await fetch("/api/eod-story/generate", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok || data.success === false) {
-        showToast(data.message || data.error || "Nothing to generate right now.");
-      } else {
-        showToast("New draft generated.");
-        await loadDrafts();
-      }
-    } finally {
-      setGenerating(false);
-    }
-  }
-
   async function handleSubmitEod(e: React.FormEvent) {
     e.preventDefault();
     const required: (keyof typeof EMPTY_EOD_FORM)[] = [
@@ -176,10 +160,10 @@ export default function EodStoryPortal() {
       if (!res.ok || data.success === false) {
         showToast(data.error || "Could not log that EOD entry.");
       } else {
-        showToast("Logged. It'll feed the next generated post and the timeline below.");
+        showToast("Logged, and your post is ready below for review.");
         setEodForm(EMPTY_EOD_FORM);
         setShowEodForm(false);
-        await loadWeekly();
+        await Promise.all([loadDrafts(), loadWeekly()]);
       }
     } finally {
       setSubmittingEod(false);
@@ -315,15 +299,8 @@ export default function EodStoryPortal() {
             </div>
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <Button variant="accent" onClick={() => setShowEodForm((v) => !v)}>
-                {showEodForm ? "Close EOD Form" : "Log an EOD"}
+                {showEodForm ? "Close EOD Form" : "Log Today's EOD & Generate Post"}
               </Button>
-              <button
-                onClick={handleGenerateNow}
-                disabled={generating}
-                className="rounded-full border border-white/35 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 disabled:opacity-50"
-              >
-                {generating ? "Generating…" : "Generate New Post Now"}
-              </button>
               <button
                 onClick={loadDrafts}
                 className="rounded-full border border-white/35 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
@@ -524,7 +501,7 @@ export default function EodStoryPortal() {
             <div className="card p-12 text-center">
               <p className="text-ink-secondary">No drafts waiting for review.</p>
               <p className="mt-1 text-sm text-ink-faint">
-                One is generated automatically every 2 days, or click &quot;Generate New Post Now&quot; above.
+                Log today&apos;s EOD above and a post generates instantly for you to review here.
               </p>
             </div>
           )}
@@ -541,7 +518,7 @@ export default function EodStoryPortal() {
             return (
               <section key={d.draftId} className="card overflow-hidden">
                 <div className="grid md:grid-cols-[340px_1fr]">
-                  <div className="flex items-center justify-center bg-bg-soft p-4">
+                  <div className="flex flex-col items-center justify-center gap-3 bg-bg-soft p-4">
                     <div style={{ width: 300, height: 375, position: "relative", overflow: "hidden", borderRadius: 16 }}>
                       <iframe
                         src={d.pageUrl}
@@ -549,6 +526,14 @@ export default function EodStoryPortal() {
                         style={{ width: 1080, height: 1350, border: "none", transform: "scale(0.2778)", transformOrigin: "top left" }}
                       />
                     </div>
+                    <a
+                      href={d.pageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-full border border-line-strong bg-bg px-4 py-2 text-xs font-semibold text-ink-secondary hover:bg-white"
+                    >
+                      Open full size ↗
+                    </a>
                   </div>
 
                   <div className="space-y-5 p-6">
@@ -564,14 +549,21 @@ export default function EodStoryPortal() {
                     </h2>
                     <p className="text-sm text-ink-secondary">{d.subhead}</p>
 
-                    <ul className="space-y-1.5">
-                      {d.impacts?.map((imp, i) => (
-                        <li key={i} className="flex gap-2 text-sm text-ink">
-                          <span className="text-ink-faint">•</span>
-                          <span>{imp.text}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    {d.workflowNodes?.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        {d.workflowNodes.map((node, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <span className="flex items-center gap-1.5 rounded-full border border-line-strong bg-bg-soft px-3 py-1.5 text-xs font-semibold uppercase text-ink">
+                              {node.label}
+                            </span>
+                            {i < d.workflowNodes.length - 1 && <span className="text-ink-faint">→</span>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {d.impactSentence && (
+                      <p className="rounded-xl bg-bg-soft p-3 text-sm font-medium text-ink">{d.impactSentence}</p>
+                    )}
 
                     <div>
                       <div className="mb-2 flex gap-2">
