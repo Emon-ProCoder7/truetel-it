@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { Button, Eyebrow } from "@/components/ui/Kit";
 import SkyBackground from "@/components/ui/SkyBackground";
@@ -25,6 +25,10 @@ type Draft = {
 
 type Tab = "facebook" | "instagram" | "linkedin";
 
+type WeeklyDay = { date: string; summary: string };
+type WeeklyEmployee = { name: string; weekSummary: string; entryCount: number; days: WeeklyDay[] };
+type WeeklyReport = { weekStart: string; weekEnd: string; employees: WeeklyEmployee[] };
+
 function LogoBadge() {
   return (
     <span className="flex size-9 items-center justify-center rounded-full bg-white p-1.5 shadow-sm">
@@ -46,6 +50,10 @@ export default function EodStoryPortal() {
   const [tabByDraft, setTabByDraft] = useState<Record<string, Tab>>({});
   const [toast, setToast] = useState("");
 
+  const [weekly, setWeekly] = useState<WeeklyReport | null>(null);
+  const [weeklyLoading, setWeeklyLoading] = useState(false);
+  const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
+
   const loadDrafts = useCallback(async () => {
     setLoading(true);
     const res = await fetch("/api/eod-story/drafts", { cache: "no-store" });
@@ -60,9 +68,22 @@ export default function EodStoryPortal() {
     setLoading(false);
   }, []);
 
+  const loadWeekly = useCallback(async () => {
+    setWeeklyLoading(true);
+    const res = await fetch("/api/eod-story/weekly-report", { cache: "no-store" });
+    if (res.status === 401) {
+      setWeeklyLoading(false);
+      return;
+    }
+    const data = await res.json().catch(() => null);
+    setWeekly(data && Array.isArray(data.employees) ? data : null);
+    setWeeklyLoading(false);
+  }, []);
+
   useEffect(() => {
     loadDrafts();
-  }, [loadDrafts]);
+    loadWeekly();
+  }, [loadDrafts, loadWeekly]);
 
   function showToast(msg: string) {
     setToast(msg);
@@ -80,6 +101,7 @@ export default function EodStoryPortal() {
     if (res.ok) {
       setAuthed(true);
       loadDrafts();
+      loadWeekly();
     } else {
       setAuthError("Incorrect password.");
     }
@@ -240,6 +262,99 @@ export default function EodStoryPortal() {
         {toast && (
           <div className="card-accent mt-6 px-5 py-3 text-sm font-medium">{toast}</div>
         )}
+
+        {/* Weekly EOD report -- glanceable rollup for the exec, same source as the social drafts */}
+        <section className="card mt-8 p-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <Eyebrow>Weekly EOD Report</Eyebrow>
+              <h2 className="text-display-sm mt-1 text-ink">
+                {weekly ? `${weekly.weekStart} to ${weekly.weekEnd}` : "Last 7 days"}
+              </h2>
+            </div>
+            <button
+              onClick={loadWeekly}
+              className="rounded-full border border-line-strong px-4 py-2 text-sm font-medium text-ink-secondary hover:bg-bg-soft"
+            >
+              {weeklyLoading ? "Refreshing…" : "Refresh"}
+            </button>
+          </div>
+
+          {!weekly && (
+            <p className="mt-4 text-sm text-ink-faint">{weeklyLoading ? "Loading…" : "Could not load the weekly report."}</p>
+          )}
+
+          {weekly && (
+            <div className="mt-5 overflow-x-auto">
+              <table className="w-full min-w-[640px] border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-ink-faint">
+                    <th className="pb-2 pr-4 font-semibold">Employee</th>
+                    <th className="pb-2 pr-4 font-semibold">This week, summarized</th>
+                    <th className="pb-2 pr-4 font-semibold">Entries</th>
+                    <th className="pb-2 font-semibold"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {weekly.employees.map((emp) => {
+                    const open = expandedEmployee === emp.name;
+                    return (
+                      <Fragment key={emp.name}>
+                        <tr className="border-b border-line align-top">
+                          <td className="py-3 pr-4 font-semibold text-ink whitespace-nowrap">{emp.name}</td>
+                          <td className="py-3 pr-4 text-ink-secondary">{emp.weekSummary}</td>
+                          <td className="py-3 pr-4">
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                emp.entryCount > 0 ? "bg-accent text-accent-ink" : "bg-bg-soft text-ink-faint"
+                              }`}
+                            >
+                              {emp.entryCount}
+                            </span>
+                          </td>
+                          <td className="py-3 text-right">
+                            {emp.entryCount > 0 && (
+                              <button
+                                onClick={() => setExpandedEmployee(open ? null : emp.name)}
+                                className="text-xs font-semibold text-ink-secondary underline hover:text-ink"
+                              >
+                                {open ? "Hide days" : "Show days"}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                        {open && (
+                          <tr className="border-b border-line bg-bg-soft/60">
+                            <td colSpan={4} className="px-2 py-3">
+                              <ul className="space-y-1.5">
+                                {emp.days
+                                  .filter((d) => d.summary)
+                                  .map((d) => (
+                                    <li key={d.date} className="flex gap-3 text-sm">
+                                      <span className="w-24 flex-shrink-0 font-mono text-xs text-ink-faint">{d.date}</span>
+                                      <span className="text-ink-secondary">{d.summary}</span>
+                                    </li>
+                                  ))}
+                                {emp.days.filter((d) => d.summary).length === 0 && (
+                                  <li className="text-sm text-ink-faint">No day-by-day detail recorded.</li>
+                                )}
+                              </ul>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <p className="mt-4 text-xs text-ink-faint">
+            Rolling 7-day window from the same EOD log employees fill in for the social posts above. Older entries are
+            purged automatically once posted, so this table and the data store stay light.
+          </p>
+        </section>
 
         <div className="mt-10 space-y-8">
           {loading && drafts.length === 0 && <p className="text-sm text-ink-faint">Loading drafts…</p>}
