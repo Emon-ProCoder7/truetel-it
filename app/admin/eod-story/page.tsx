@@ -239,6 +239,26 @@ export default function EodStoryPortal() {
     }
   }
 
+  async function handleDelete(draftId: string) {
+    if (!confirm("Delete this draft and its graphic for good? This can't be undone.")) return;
+    setBusyDraftId(draftId);
+    try {
+      const res = await fetch("/api/eod-story/delete-draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ draftId }),
+      });
+      const data = await res.json();
+      if (!res.ok) showToast(data.error || "Could not delete this draft.");
+      else {
+        showToast("Deleted.");
+        await loadDrafts();
+      }
+    } finally {
+      setBusyDraftId(null);
+    }
+  }
+
   if (authed === null) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-bg">
@@ -520,10 +540,11 @@ export default function EodStoryPortal() {
                 <div className="grid md:grid-cols-[340px_1fr]">
                   <div className="flex flex-col items-center justify-center gap-3 bg-bg-soft p-4">
                     <div style={{ width: 300, height: 375, position: "relative", overflow: "hidden", borderRadius: 16 }}>
-                      <iframe
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
                         src={d.pageUrl}
-                        title={`Preview ${d.draftId}`}
-                        style={{ width: 1080, height: 1350, border: "none", transform: "scale(0.2778)", transformOrigin: "top left" }}
+                        alt={`Preview ${d.draftId}`}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
                       />
                     </div>
                     <a
@@ -617,6 +638,13 @@ export default function EodStoryPortal() {
                           className="ml-auto rounded-full border border-line-strong px-5 py-3 text-sm font-semibold text-ink-secondary hover:bg-bg-soft disabled:opacity-50"
                         >
                           Skip This Cycle
+                        </button>
+                        <button
+                          onClick={() => handleDelete(d.draftId)}
+                          disabled={busy}
+                          className="rounded-full border border-red-300 px-5 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                        >
+                          Delete
                         </button>
                       </div>
                     </div>
