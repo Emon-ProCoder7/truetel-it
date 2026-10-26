@@ -1,0 +1,364 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
+import { Button, Eyebrow } from "@/components/ui/Kit";
+import SkyBackground from "@/components/ui/SkyBackground";
+
+type Draft = {
+  draftId: string;
+  status: string;
+  eyebrowText: string;
+  headlineWhite: string;
+  headlineGold: string;
+  subhead: string;
+  serviceTag: string;
+  impacts: { icon: string; text: string }[];
+  captionFacebook: string;
+  captionInstagram: string;
+  captionLinkedin: string;
+  hashtags: string[];
+  pageUrl: string;
+  feedbackHistory: string[];
+  revisionCount: number;
+};
+
+type Tab = "facebook" | "instagram" | "linkedin";
+
+function LogoBadge() {
+  return (
+    <span className="flex size-9 items-center justify-center rounded-full bg-white p-1.5 shadow-sm">
+      <Image src="/brand/truetel-logo.png" alt="TrueTel" width={26} height={26} className="object-contain" priority />
+    </span>
+  );
+}
+
+export default function EodStoryPortal() {
+  const [authed, setAuthed] = useState<boolean | null>(null);
+  const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+
+  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [busyDraftId, setBusyDraftId] = useState<string | null>(null);
+  const [feedbackByDraft, setFeedbackByDraft] = useState<Record<string, string>>({});
+  const [tabByDraft, setTabByDraft] = useState<Record<string, Tab>>({});
+  const [toast, setToast] = useState("");
+
+  const loadDrafts = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch("/api/eod-story/drafts", { cache: "no-store" });
+    if (res.status === 401) {
+      setAuthed(false);
+      setLoading(false);
+      return;
+    }
+    setAuthed(true);
+    const data = await res.json().catch(() => ({ drafts: [] }));
+    setDrafts(Array.isArray(data.drafts) ? data.drafts : []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadDrafts();
+  }, [loadDrafts]);
+
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(""), 4000);
+  }
+
+  async function submitPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setAuthError("");
+    const res = await fetch("/api/eod-story/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    if (res.ok) {
+      setAuthed(true);
+      loadDrafts();
+    } else {
+      setAuthError("Incorrect password.");
+    }
+  }
+
+  async function handleGenerateNow() {
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/eod-story/generate", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) showToast(data.error || "Nothing to generate right now.");
+      else {
+        showToast("New draft generated.");
+        await loadDrafts();
+      }
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function handleRegenerate(draftId: string) {
+    const feedback = (feedbackByDraft[draftId] || "").trim();
+    if (!feedback) {
+      showToast("Type what you'd like changed first.");
+      return;
+    }
+    setBusyDraftId(draftId);
+    try {
+      const res = await fetch("/api/eod-story/regenerate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ draftId, feedback }),
+      });
+      const data = await res.json();
+      if (!res.ok) showToast(data.error || "Could not regenerate this draft.");
+      else {
+        showToast("Draft updated with your feedback.");
+        setFeedbackByDraft((prev) => ({ ...prev, [draftId]: "" }));
+        await loadDrafts();
+      }
+    } finally {
+      setBusyDraftId(null);
+    }
+  }
+
+  async function handleApprove(draftId: string) {
+    if (!confirm("Post this to TrueTel's Facebook Page and Instagram now?")) return;
+    setBusyDraftId(draftId);
+    try {
+      const res = await fetch("/api/eod-story/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ draftId }),
+      });
+      const data = await res.json();
+      if (!res.ok) showToast(data.error || "Could not publish this draft.");
+      else {
+        showToast("Posted to Facebook and Instagram.");
+        await loadDrafts();
+      }
+    } finally {
+      setBusyDraftId(null);
+    }
+  }
+
+  async function handleReject(draftId: string) {
+    if (!confirm("Skip this draft? Its entries stay queued for next time.")) return;
+    setBusyDraftId(draftId);
+    try {
+      const res = await fetch("/api/eod-story/reject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ draftId }),
+      });
+      const data = await res.json();
+      if (!res.ok) showToast(data.error || "Could not skip this draft.");
+      else {
+        showToast("Skipped. Those entries will appear in the next cycle.");
+        await loadDrafts();
+      }
+    } finally {
+      setBusyDraftId(null);
+    }
+  }
+
+  if (authed === null) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-bg">
+        <p className="text-sm text-ink-faint">Loading…</p>
+      </main>
+    );
+  }
+
+  if (!authed) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-bg px-4">
+        <form onSubmit={submitPassword} className="card w-full max-w-sm space-y-5 p-8">
+          <div className="flex items-center gap-2.5">
+            <LogoBadge />
+            <span className="text-[1.05rem] font-semibold tracking-tight text-ink">TrueTel</span>
+          </div>
+          <div>
+            <h1 className="text-display-sm text-ink">Story Portal</h1>
+            <p className="mt-1 text-sm text-ink-secondary">Enter the portal password to review pending posts.</p>
+          </div>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-full border border-line-strong px-4 py-3 text-sm outline-none focus:border-ink"
+            placeholder="Password"
+            autoFocus
+          />
+          {authError && <p className="text-sm text-red-600">{authError}</p>}
+          <Button type="submit" variant="dark" className="w-full justify-center">
+            Enter
+          </Button>
+        </form>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-bg px-3 pb-16 pt-3 sm:px-4 sm:pt-4">
+      <div className="mx-auto max-w-5xl">
+        {/* Banner -- same sky shader + logo treatment as the main site's hero */}
+        <div className="relative overflow-hidden rounded-[28px] sm:rounded-[36px]">
+          <div className="absolute inset-0">
+            <SkyBackground />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/10 to-black/35" />
+          </div>
+          <div className="relative z-10 flex flex-col gap-4 px-6 py-8 sm:px-10 sm:py-12">
+            <div className="flex items-center gap-2.5">
+              <LogoBadge />
+              <span className="text-[1.05rem] font-semibold tracking-tight text-white">TrueTel</span>
+            </div>
+            <div>
+              <Eyebrow onDark>Internal · not indexed</Eyebrow>
+              <h1 className="text-display-lg mt-2 text-[clamp(1.8rem,3.4vw,2.6rem)] text-white">Story Portal</h1>
+              <p className="mt-2 max-w-md text-white/75">
+                Review what the EOD story engine wrote before anything goes out to Facebook or Instagram.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <Button variant="accent" onClick={handleGenerateNow} className={generating ? "opacity-60" : ""}>
+                {generating ? "Generating…" : "Generate New Post Now"}
+              </Button>
+              <button
+                onClick={loadDrafts}
+                className="rounded-full border border-white/35 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
+              >
+                Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {toast && (
+          <div className="card-accent mt-6 px-5 py-3 text-sm font-medium">{toast}</div>
+        )}
+
+        <div className="mt-10 space-y-8">
+          {loading && drafts.length === 0 && <p className="text-sm text-ink-faint">Loading drafts…</p>}
+
+          {!loading && drafts.length === 0 && (
+            <div className="card p-12 text-center">
+              <p className="text-ink-secondary">No drafts waiting for review.</p>
+              <p className="mt-1 text-sm text-ink-faint">
+                One is generated automatically every 2 days, or click &quot;Generate New Post Now&quot; above.
+              </p>
+            </div>
+          )}
+
+          {drafts.map((d) => {
+            const tab = tabByDraft[d.draftId] || "facebook";
+            const captionByTab: Record<Tab, string> = {
+              facebook: d.captionFacebook,
+              instagram: d.captionInstagram,
+              linkedin: d.captionLinkedin,
+            };
+            const busy = busyDraftId === d.draftId;
+
+            return (
+              <section key={d.draftId} className="card overflow-hidden">
+                <div className="grid md:grid-cols-[340px_1fr]">
+                  <div className="flex items-center justify-center bg-bg-soft p-4">
+                    <div style={{ width: 300, height: 375, position: "relative", overflow: "hidden", borderRadius: 16 }}>
+                      <iframe
+                        src={d.pageUrl}
+                        title={`Preview ${d.draftId}`}
+                        style={{ width: 1080, height: 1350, border: "none", transform: "scale(0.2778)", transformOrigin: "top left" }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-5 p-6">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <Eyebrow>{d.eyebrowText}</Eyebrow>
+                      <span className="text-xs text-ink-faint">
+                        {d.serviceTag} · rev {d.revisionCount} · {d.status}
+                      </span>
+                    </div>
+
+                    <h2 className="text-display-md text-ink">
+                      {d.headlineWhite} <span className="text-accent-ink bg-accent rounded px-1">{d.headlineGold}</span>
+                    </h2>
+                    <p className="text-sm text-ink-secondary">{d.subhead}</p>
+
+                    <ul className="space-y-1.5">
+                      {d.impacts?.map((imp, i) => (
+                        <li key={i} className="flex gap-2 text-sm text-ink">
+                          <span className="text-ink-faint">•</span>
+                          <span>{imp.text}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <div>
+                      <div className="mb-2 flex gap-2">
+                        {(["facebook", "instagram", "linkedin"] as Tab[]).map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setTabByDraft((prev) => ({ ...prev, [d.draftId]: t }))}
+                            className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                              tab === t ? "border-ink bg-ink text-white" : "border-line-strong text-ink-secondary"
+                            }`}
+                          >
+                            {t[0].toUpperCase() + t.slice(1)}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="whitespace-pre-wrap rounded-xl bg-bg-soft p-3 text-sm text-ink">
+                        {captionByTab[tab] || "(no caption for this platform)"}
+                      </p>
+                      <p className="mt-2 text-xs text-ink-faint">{d.hashtags?.map((h) => `#${h}`).join(" ")}</p>
+                    </div>
+
+                    {d.feedbackHistory?.length > 0 && (
+                      <details className="text-xs text-ink-faint">
+                        <summary className="cursor-pointer">Revision history ({d.feedbackHistory.length})</summary>
+                        <ul className="mt-1 list-inside list-disc space-y-1">
+                          {d.feedbackHistory.map((f, i) => (
+                            <li key={i}>{f}</li>
+                          ))}
+                        </ul>
+                      </details>
+                    )}
+
+                    <div className="space-y-3 border-t border-line pt-4">
+                      <textarea
+                        value={feedbackByDraft[d.draftId] || ""}
+                        onChange={(e) => setFeedbackByDraft((prev) => ({ ...prev, [d.draftId]: e.target.value }))}
+                        placeholder="What should change? e.g. 'shorten the Instagram caption', 'use a brighter photo', 'make the headline punchier'"
+                        rows={2}
+                        className="w-full rounded-2xl border border-line-strong px-4 py-3 text-sm outline-none focus:border-ink"
+                      />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button variant="outline" onClick={() => handleRegenerate(d.draftId)} className={busy ? "opacity-60" : ""}>
+                          {busy ? "Working…" : "Request Changes"}
+                        </Button>
+                        <Button variant="accent" onClick={() => handleApprove(d.draftId)} className={busy ? "opacity-60" : ""}>
+                          {busy ? "Working…" : "Approve & Post"}
+                        </Button>
+                        <button
+                          onClick={() => handleReject(d.draftId)}
+                          disabled={busy}
+                          className="ml-auto rounded-full border border-line-strong px-5 py-3 text-sm font-semibold text-ink-secondary hover:bg-bg-soft disabled:opacity-50"
+                        >
+                          Skip This Cycle
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      </div>
+    </main>
+  );
+}
