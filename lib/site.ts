@@ -10,8 +10,8 @@ export const PRIMARY_CTA = "Book a Free IT Assessment";
 export const PRIMARY_CTA_SHORT = "Book Free Assessment";
 
 export const CONTACT = {
-  phoneDisplay: "+61 477 888 141",
-  phoneHref: "tel:+61477888141",
+  phoneDisplay: "1300 70 85 85",
+  phoneHref: "tel:1300708585",
   email: "admin@truetel.com.au",
   emailHref: "mailto:admin@truetel.com.au",
   suburb: "Ravenhall, VIC 3023",
